@@ -45,6 +45,8 @@ from pygame.locals import *
 from mingus.core import chords
 from mingus.containers import *
 
+import midis2events
+
 
 OCTAVES = 5  # number of octaves to show
 LOWEST = 2  # lowest octave to show
@@ -81,7 +83,10 @@ def load_img(name):
 pygame.init()
 pygame.font.init()
 midi.init()
-midi = midi.Output(0)
+midi_out_id = 3  # Sound Blaster Synth on my machine, lower latency
+midi_out = midi.Output(midi_out_id)
+midi_in_id = midi.get_default_input_id()
+midi_in = midi.Input(midi_in_id)
 
 font = pygame.font.SysFont('monospace', 12)
 screen = pygame.display.set_mode((640, 480))
@@ -172,7 +177,7 @@ def play_note(note):
 
     # Play the note
 
-    midi.note_on(int(note) + 12, 100, channel)
+    midi_out.note_on(int(note) + 12, 100, channel)
 
 
 KEY_MAP = {
@@ -231,7 +236,7 @@ while not quit:
         # with a 'cool' fading effect.
 
         if diff > FADEOUT:
-            midi.note_off(int(note[2]) + 12, channel)
+            midi_out.note_off(int(note[2]) + 12, channel)
             playing_w.remove(note)
         else:
             pressed.fill((0, ((FADEOUT - diff) / FADEOUT) * 255, 124))
@@ -246,7 +251,7 @@ while not quit:
         # Instead of SUB we ADD this time, and change the coloration
 
         if diff > FADEOUT:
-            midi.note_off(int(note[2]) + 12, channel)
+            midi_out.note_off(int(note[2]) + 12, channel)
             playing_b.remove(note)
         else:
             pressed.fill((((FADEOUT - diff) / FADEOUT) * 125, 0, 125))
@@ -271,8 +276,15 @@ while not quit:
             elif event.key == K_ESCAPE:
                 quit = True
 
+    for event in midis2events.midis2events(midi_in.read(40), midi_in_id):
+        if event.command == midis2events.NOTE_ON:
+            play_note(Note().from_int(event.data1))
+        #elif event["command"] == midis2events.NOTE_OFF:
+            #midi_out.note_off(event["data1"], event["data2"], channel)
+
     # Update the screen
 
     pygame.display.update()
     tick += 0.001
+
 pygame.quit()

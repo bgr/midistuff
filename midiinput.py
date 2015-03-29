@@ -1,6 +1,14 @@
+from rx.subjects import Subject
+from rx.concurrency import PyGameScheduler
+
 import pygame
 from pygame import midi as pygame_midi
 from midis2events import midis2events
+
+#scheduler = PyGameScheduler()
+
+#midi_events = Subject()
+#midi_events.observe_on(scheduler).subscribe(on_next, on_error=on_error)
 
 pygame.init()
 pygame.font.init()
@@ -26,3 +34,5 @@ while True:
     events = midis2events(midi_input.read(40), midi_input_id)
     for event in events:
         print(event)
+
+    #scheduler.run()
