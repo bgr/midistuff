@@ -1,0 +1,4 @@
+.ropeproject/
+*$py.class
+*.pyc
+*.sw[pon]
