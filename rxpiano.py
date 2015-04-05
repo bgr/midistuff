@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import pygame
+from __future__ import print_function
 from pygame import midi
 import midis2events
 from rx.concurrency import PyGameScheduler
@@ -46,11 +46,23 @@ raw_offs = midi_events.filter(lambda ev: ev.command == midis2events.NOTE_OFF)
 note_ons = raw_ons.map(lambda ev: NoteOn(ev.data1, ev.data2))
 note_offs = raw_offs.map(lambda ev: NoteOff(ev.data1))
 
-note_ons.subscribe(lambda n: print("ON: {}".format(n)))
-note_offs.subscribe(lambda n: print("OFF: {}".format(n)))
+#note_ons.subscribe(lambda n: print("ON: {}".format(n)))
+#note_offs.subscribe(lambda n: print("OFF: {}".format(n)))
 
+
+def acc_press_or_release(acc, cur):
+    note = cur.data1
+    if cur.command == midis2events.NOTE_ON:
+        acc.add(note)
+    elif cur.command == midis2events.NOTE_OFF:
+        acc.discard(note)
+    return acc
+
+currently_pressed = midi_events.scan(acc_press_or_release, set())
+currently_pressed.subscribe(print)
 
 print("Running, press Ctrl-C to quit")
+
 
 while True:
     scheduler.run()
